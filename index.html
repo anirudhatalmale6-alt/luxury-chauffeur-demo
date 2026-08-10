@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noir Chauffeur — Private Luxury Rides, Booked in Seconds</title>
+<meta name="description" content="Chauffeur-driven luxury travel. Reserve in three taps, pay how you like, and follow your car live until it reaches you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div class="demo-ribbon">DEMO BUILD — sample content &amp; placeholder brand. Every screen below is clickable: <a href="book.html">Booking</a> · <a href="track.html">Live tracking</a> · <a href="rate.html">Ratings</a> · <a href="admin.html">Admin</a></div>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">N</span>
+      <span class="brand-name">NOIR<small>Chauffeur</small></span>
+    </a>
+    <nav class="nav">
+      <a href="#fleet">Fleet</a>
+      <a href="#how">How it works</a>
+      <a href="#reviews">Reviews</a>
+      <a href="admin.html">Admin</a>
+      <a class="btn btn-gold btn-sm" href="book.html">Reserve a car</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Private chauffeur service</span>
+      <h1><span>Arrive the way</span><span>you <em class="serif-em">intended.</em></span></h1>
+      <p class="lede" style="margin-top:22px">
+        A vetted chauffeur, a spotless car and a fixed price — confirmed in under a minute.
+        Track your driver on a live map from the moment you book until the door opens.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-gold" href="book.html">Reserve a car →</a>
+        <a class="btn btn-ghost" href="track.html">See live tracking</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>4.9</strong><span>Average rating</span></div>
+        <div><strong>12k+</strong><span>Journeys completed</span></div>
+        <div><strong>3 min</strong><span>Median pickup wait</span></div>
+      </div>
+    </div>
+    <div class="car-frame">
+      <div style="position:absolute;inset:0;display:grid;place-items:center;padding:28px" id="heroArt"></div>
+      <div style="position:absolute;inset:auto 0 0 0;height:45%;background:linear-gradient(180deg,transparent,rgba(232,199,102,.06))"></div>
+      <span class="badge">Mercedes-Benz S-Class · First Class tier</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VALUE ================= -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="grid-3">
+      <div class="card" data-reveal>
+        <div class="ico">◎</div>
+        <h3>Live on the map</h3>
+        <p>Your confirmation page turns into a tracker the moment a chauffeur is assigned — position, ETA and status, refreshed every few seconds.</p>
+      </div>
+      <div class="card" data-reveal>
+        <div class="ico">▣</div>
+        <h3>Pay your way</h3>
+        <p>Card, Apple&nbsp;Pay, Google&nbsp;Pay, Link and corporate accounts. Fares are authorised at booking and captured on completion.</p>
+      </div>
+      <div class="card" data-reveal>
+        <div class="ico">★</div>
+        <h3>Held to a standard</h3>
+        <p>Every trip ends with a rating. Scores are public on driver profiles, and anything under four stars lands on your desk the same day.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FLEET ================= -->
+<section id="fleet">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">The fleet</span>
+      <h2>Four tiers. No compromise in any of them.</h2>
+      <p class="lede">Pricing is set from the admin panel — base fare, per-kilometre and per-minute rates, per tier, changeable in seconds.</p>
+    </div>
+    <div class="grid-4" id="fleetGrid"></div>
+  </div>
+</section>
+
+<!-- ================= HOW ================= -->
+<section id="how" style="background:var(--bg-elev);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">How it works</span>
+      <h2>Four steps, about fifty seconds.</h2>
+    </div>
+    <div class="steps">
+      <div class="step" data-reveal><h3>Tell us where</h3><p>Pickup, destination, date and time — with airport and hourly-hire options.</p></div>
+      <div class="step" data-reveal><h3>Choose your car</h3><p>Live fare shown per tier before you commit. No surge, no surprises.</p></div>
+      <div class="step" data-reveal><h3>Confirm &amp; pay</h3><p>Card, Apple Pay or Google Pay. Card details never touch our servers.</p></div>
+      <div class="step" data-reveal><h3>Watch it arrive</h3><p>Chauffeur details, plate and a live map, straight after checkout.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REVIEWS ================= -->
+<section id="reviews">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Ratings &amp; reviews</span>
+      <h2>Collected after every completed trip.</h2>
+    </div>
+    <div class="grid-3">
+      <div class="review" data-reveal>
+        <div class="stars">★★★★★</div>
+        <p>“Booked at 6am from the terminal, car was already waiting. Watched it circle the pickup loop on the map — no phone calls, no guessing.”</p>
+        <div class="who"><span class="avatar">HR</span><div><b>Helena R.</b><span>First Class · Heathrow T5 → Mayfair</span></div></div>
+      </div>
+      <div class="review" data-reveal>
+        <div class="stars">★★★★★</div>
+        <p>“We move clients around all week. The corporate account and the monthly export are the two things that made us switch.”</p>
+        <div class="who"><span class="avatar">DM</span><div><b>Daniel M.</b><span>Business Van · Roadshow, 3 days</span></div></div>
+      </div>
+      <div class="review" data-reveal>
+        <div class="stars">★★★★☆</div>
+        <p>“Immaculate car, chauffeur carried both cases. Half a star off only because I wanted a later pickup slot than the app allowed.”</p>
+        <div class="who"><span class="avatar">SA</span><div><b>Sofia A.</b><span>Luxury SUV · Chelsea → Gatwick</span></div></div>
+      </div>
+    </div>
+    <p style="margin-top:22px"><a class="btn btn-ghost btn-sm" href="rate.html">Open the rating screen →</a></p>
+  </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="band">
+      <span class="eyebrow">Ready when you are</span>
+      <h2 style="margin-bottom:14px">Your car is three taps away.</h2>
+      <p class="lede" style="margin:0 auto 26px">Fixed fares, professional chauffeurs, and a live map so you never wonder where the car is.</p>
+      <a class="btn btn-gold" href="book.html">Reserve a car →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="index.html" style="margin-bottom:14px">
+          <span class="brand-mark">N</span><span class="brand-name">NOIR<small>Chauffeur</small></span>
+        </a>
+        <p style="font-size:.88rem;max-width:32ch">Private, chauffeur-driven travel. Booked online, tracked live, rated afterwards.</p>
+      </div>
+      <div><h4>Service</h4><a href="book.html">Book a ride</a><a href="#fleet">Our fleet</a><a href="track.html">Track a ride</a><a href="rate.html">Rate a driver</a></div>
+      <div><h4>Company</h4><a href="#how">How it works</a><a href="#reviews">Reviews</a><a href="admin.html">Admin panel</a></div>
+      <div><h4>Contact</h4><a href="#">+44 20 0000 0000</a><a href="#">Available 24 / 7</a><a href="#">Corporate accounts</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Noir Chauffeur — demo build for client review.</span>
+      <span>Placeholder brand, sample fares &amp; simulated tracking.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+<script>
+document.getElementById('heroArt').innerHTML = carArt('sedan-long');
+
+document.getElementById('fleetGrid').innerHTML = FLEET.map(function (t) {
+  return '<article class="tier" data-reveal>' +
+    (t.badge ? '<span class="tag">' + t.badge + '</span>' : '') +
+    '<div class="tier-art" style="display:grid;place-items:center;padding:14px">' + carArt(t.art) + '</div>' +
+    '<div class="tier-body">' +
+      '<div class="tier-top"><h3>' + t.name + '</h3><span class="price">from ' + money(t.base) + '</span></div>' +
+      '<p style="margin:0;font-size:.86rem">' + t.car + ' or similar · ' + t.seats + ' seats · ' + t.bags + ' bags</p>' +
+      '<ul>' + t.perks.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul>' +
+      '<a class="btn btn-ghost btn-sm" style="margin-top:16px" href="book.html?tier=' + t.id + '">Select ' + t.name + '</a>' +
+    '</div></article>';
+}).join('');
+</script>
+</body>
+</html>

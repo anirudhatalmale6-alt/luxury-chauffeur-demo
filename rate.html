@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rate your chauffeur — Noir Chauffeur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div class="demo-ribbon">DEMO BUILD — ratings submitted here update the driver profile below on the fly.</div>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">N</span><span class="brand-name">NOIR<small>Chauffeur</small></span></a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="book.html">Book</a>
+      <a href="track.html">Track</a>
+      <a href="rate.html" class="on">Rate</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="wrap">
+    <div class="page-head">
+      <span class="eyebrow">Trip completed</span>
+      <h1>How was your journey?</h1>
+    </div>
+
+    <div class="grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+
+      <!-- RATING FORM -->
+      <div>
+        <div class="panel" id="formPanel">
+          <div class="driver-card" style="margin-bottom:20px">
+            <span class="ph">MA</span>
+            <div class="d-meta">
+              <b>Marcus A.</b>
+              <small id="tripLine">First Class · Heathrow T5 → Mayfair</small>
+              <span class="plate">LX24 NCH</span>
+            </div>
+          </div>
+
+          <label class="fld" style="margin-bottom:4px"><span>Your rating</span></label>
+          <div class="rate-stars" id="stars">
+            <button data-v="1">★</button><button data-v="2">★</button><button data-v="3">★</button><button data-v="4">★</button><button data-v="5">★</button>
+          </div>
+
+          <label class="fld" style="margin-bottom:8px"><span>What stood out?</span></label>
+          <div class="chips" id="chips">
+            <button class="chip">Punctual</button><button class="chip">Immaculate car</button>
+            <button class="chip">Smooth driving</button><button class="chip">Great conversation</button>
+            <button class="chip">Helped with luggage</button><button class="chip">Discreet &amp; professional</button>
+            <button class="chip">Knew the route</button>
+          </div>
+
+          <label class="fld" style="margin-top:20px"><span>Leave a review (optional)</span>
+            <textarea id="txt" rows="4" placeholder="Tell other passengers about your journey…"></textarea>
+          </label>
+
+          <label class="fld"><span>Add a gratuity</span></label>
+          <div class="chips" id="tips">
+            <button class="chip on" data-t="0">No tip</button><button class="chip" data-t="5">£5</button>
+            <button class="chip" data-t="10">£10</button><button class="chip" data-t="20">£20</button>
+          </div>
+
+          <button class="btn btn-gold btn-block" id="submit" style="margin-top:24px" disabled>Choose a rating to continue</button>
+          <p class="note" style="margin-top:16px">Anything at three stars or below opens a service ticket in the admin panel automatically and is flagged to you within the hour.</p>
+        </div>
+
+        <div class="panel" id="thanks" style="display:none;text-align:center">
+          <div style="font-size:2.4rem;color:var(--gold)">★</div>
+          <h3 style="margin:8px 0 10px">Thank you — that's logged.</h3>
+          <p id="thanksTxt">Your rating is on Marcus's profile and in tonight's quality report.</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px">
+            <a class="btn btn-ghost btn-sm" href="book.html">Book another ride</a>
+            <a class="btn btn-gold btn-sm" href="admin.html">See it in the admin panel</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PUBLIC PROFILE -->
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h3>Driver profile — public</h3><span class="pill live">Active</span></div>
+          <div class="rating-summary">
+            <div style="text-align:center">
+              <div class="rating-big" id="avg">4.94</div>
+              <div class="stars">★★★★★</div>
+              <small style="color:var(--txt-mute)" id="cnt">1,208 ratings</small>
+            </div>
+            <div class="bars" id="bars"></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px" id="badges">
+            <span class="chip on">Punctual ×982</span><span class="chip on">Immaculate car ×874</span>
+            <span class="chip on">Smooth driving ×701</span><span class="chip on">Discreet ×544</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Recent reviews</h3><small style="color:var(--txt-mute)">Newest first</small></div>
+          <div id="reviews"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+/* pull the completed trip if the visitor came from the tracker */
+var b = BK.get();
+if (b.ref && b.from) {
+  document.getElementById('tripLine').textContent =
+    b.tierName + ' · ' + b.from.name.split(' — ')[0] + ' → ' + b.to.name.split(' — ')[0];
+}
+
+var REVIEWS = [
+  { n: 'Helena R.', i: 'HR', s: 5, t: 'Booked at 6am from the terminal and the car was already waiting. Watched it circle the pickup loop on the map — no phone calls, no guessing.', w: '2 days ago' },
+  { n: 'Daniel M.', i: 'DM', s: 5, t: 'Third time with Marcus this month. Knows exactly which entrance to use at every office in the City.', w: '5 days ago' },
+  { n: 'Sofia A.', i: 'SA', s: 4, t: 'Immaculate car and he carried both cases. Half a star off only because I wanted a later slot than the app allowed.', w: '1 week ago' },
+  { n: 'James P.', i: 'JP', s: 5, t: 'Flight landed 40 minutes early — he was already there. Whatever the flight tracking is doing, it works.', w: '2 weeks ago' }
+];
+
+var DIST = [1102, 82, 15, 6, 3]; /* 5★ … 1★ */
+
+function renderProfile() {
+  var total = DIST.reduce(function (a, c) { return a + c; }, 0);
+  var sum = DIST.reduce(function (a, c, k) { return a + c * (5 - k); }, 0);
+  document.getElementById('avg').textContent = (sum / total).toFixed(2);
+  document.getElementById('cnt').textContent = total.toLocaleString() + ' ratings';
+  document.getElementById('bars').innerHTML = DIST.map(function (c, k) {
+    return '<div class="bar-row"><span>' + (5 - k) + '★</span><span class="bar"><i style="width:' +
+      (c / total * 100).toFixed(1) + '%"></i></span><span>' + c.toLocaleString() + '</span></div>';
+  }).join('');
+}
+function renderReviews() {
+  document.getElementById('reviews').innerHTML = REVIEWS.map(function (r) {
+    return '<div style="padding:16px 0;border-top:1px solid var(--line)">' +
+      '<div class="who" style="margin-bottom:8px"><span class="avatar">' + r.i + '</span>' +
+      '<div><b>' + r.n + '</b><span>' + r.w + '</span></div>' +
+      '<span class="stars" style="margin-left:auto">' + '★'.repeat(r.s) + '<span style="color:#35323a">' + '★'.repeat(5 - r.s) + '</span></span></div>' +
+      '<p style="margin:0;font-size:.9rem">' + r.t + '</p></div>';
+  }).join('');
+}
+renderProfile(); renderReviews();
+
+/* ---------- form ---------- */
+var rating = 0, tip = 0;
+document.getElementById('stars').addEventListener('click', function (e) {
+  var btn = e.target.closest('button'); if (!btn) return;
+  rating = +btn.dataset.v;
+  [].forEach.call(this.children, function (s) { s.classList.toggle('on', +s.dataset.v <= rating); });
+  var sub = document.getElementById('submit');
+  sub.disabled = false;
+  sub.textContent = rating >= 4 ? 'Submit rating' : 'Submit rating & report an issue';
+});
+document.getElementById('chips').addEventListener('click', function (e) {
+  var c = e.target.closest('.chip'); if (c) c.classList.toggle('on');
+});
+document.getElementById('tips').addEventListener('click', function (e) {
+  var c = e.target.closest('.chip'); if (!c) return;
+  [].forEach.call(this.children, function (x) { x.classList.remove('on'); });
+  c.classList.add('on'); tip = +c.dataset.t;
+});
+
+document.getElementById('submit').addEventListener('click', function () {
+  this.disabled = true; this.textContent = 'Saving…';
+  var tags = [].filter.call(document.querySelectorAll('#chips .chip'), function (c) { return c.classList.contains('on'); })
+                .map(function (c) { return c.textContent; });
+  var txt = document.getElementById('txt').value.trim();
+  setTimeout(function () {
+    DIST[5 - rating]++;
+    REVIEWS.unshift({ n: 'You', i: 'YO', s: rating, w: 'just now',
+      t: txt || (tags.length ? tags.join(' · ') : 'Rated ' + rating + ' stars.') });
+    renderProfile(); renderReviews();
+    document.getElementById('formPanel').style.display = 'none';
+    document.getElementById('thanks').style.display = '';
+    document.getElementById('thanksTxt').textContent = rating >= 4
+      ? 'Your ' + rating + '-star rating' + (tip ? ' and ' + money(tip) + ' gratuity' : '') + ' is on Marcus\'s profile and in tonight\'s quality report.'
+      : 'Thanks for the honest feedback. A service ticket has been raised and the office will contact you within the hour.';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 800);
+});
+</script>
+</body>
+</html>

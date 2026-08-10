@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reserve a car — Noir Chauffeur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div class="demo-ribbon">DEMO BUILD — no real payment is taken. Complete the flow to reach the live tracking screen.</div>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">N</span><span class="brand-name">NOIR<small>Chauffeur</small></span></a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="index.html#fleet">Fleet</a>
+      <a href="track.html">Track</a>
+      <a href="admin.html">Admin</a>
+      <a class="btn btn-gold btn-sm on" href="book.html">Reserve</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="wrap">
+    <div class="page-head">
+      <span class="eyebrow">Reservation</span>
+      <h1>Book your chauffeur</h1>
+    </div>
+
+    <div class="progress">
+      <i class="done" data-p="1"></i><i data-p="2"></i><i data-p="3"></i><i data-p="4"></i>
+    </div>
+    <div class="progress-labels">
+      <span class="on" data-l="1">Journey</span><span data-l="2">Vehicle</span><span data-l="3">Payment</span><span data-l="4">Confirm</span>
+    </div>
+
+    <div class="wizard">
+      <div>
+        <!-- STEP 1 -->
+        <section class="panel stepview on" data-step="1">
+          <div class="panel-head"><h3>Where are we taking you?</h3></div>
+          <div class="grid-2">
+            <label class="fld"><span>Pickup</span><select id="from"></select></label>
+            <label class="fld"><span>Destination</span><select id="to"></select></label>
+          </div>
+          <div class="grid-2">
+            <label class="fld"><span>Date</span><input type="date" id="date"></label>
+            <label class="fld"><span>Pickup time</span><input type="time" id="time"></label>
+          </div>
+          <div class="grid-2">
+            <label class="fld"><span>Passengers</span>
+              <select id="pax"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+            </label>
+            <label class="fld"><span>Luggage</span>
+              <select id="bags"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+            </label>
+          </div>
+          <label class="fld"><span>Flight number (optional — we track it and adjust pickup)</span><input id="flight" placeholder="e.g. BA 178"></label>
+          <label class="fld"><span>Notes for the chauffeur (optional)</span><textarea id="notes" rows="2" placeholder="Meet at arrivals with a name board"></textarea></label>
+          <div class="wizard-nav">
+            <button class="btn btn-gold" data-go="2">Continue to vehicles →</button>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="panel stepview" data-step="2">
+          <div class="panel-head"><h3>Choose your car</h3><small style="color:var(--txt-mute)" id="routeNote"></small></div>
+          <div id="tierList"></div>
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" data-go="1">← Back</button>
+            <button class="btn btn-gold" data-go="3">Continue to payment →</button>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="panel stepview" data-step="3">
+          <div class="panel-head"><h3>How would you like to pay?</h3></div>
+          <div class="paylist" id="payList">
+            <div class="pay sel" data-pay="card"><span class="logo" style="color:#6f8cff">CARD</span><div><b>Credit or debit card</b><small>Visa, Mastercard, Amex — 3-D Secure applied automatically</small></div></div>
+            <div class="pay" data-pay="apple"><span class="logo" style="color:#f3f1ec">APPLE</span><div><b>Apple&nbsp;Pay</b><small>One-touch on iPhone, iPad and Safari</small></div></div>
+            <div class="pay" data-pay="google"><span class="logo" style="color:#6cc46c">G Pay</span><div><b>Google&nbsp;Pay</b><small>One-touch on Android and Chrome</small></div></div>
+            <div class="pay" data-pay="link"><span class="logo" style="color:#57cc99">LINK</span><div><b>Wallet / Link</b><small>Saved cards across devices, no re-entry</small></div></div>
+            <div class="pay" data-pay="account"><span class="logo" style="color:#e8c766">B2B</span><div><b>Corporate account</b><small>Invoiced monthly — approved business clients only</small></div></div>
+          </div>
+
+          <div id="cardFields" style="margin-top:22px">
+            <label class="fld"><span>Card number</span><input id="cnum" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19"></label>
+            <div class="grid-2">
+              <label class="fld"><span>Expiry</span><input id="cexp" placeholder="12 / 29" maxlength="7"></label>
+              <label class="fld"><span>Security code</span><input id="ccvc" inputmode="numeric" placeholder="123" maxlength="4"></label>
+            </div>
+            <label class="fld"><span>Name on card</span><input id="cname" placeholder="A. Passenger"></label>
+            <p class="note">In production this block is the Stripe Payment Element — card data goes straight to the gateway, never through the website. Apple&nbsp;Pay and Google&nbsp;Pay buttons appear automatically on supported devices.</p>
+          </div>
+          <div id="walletNote" style="margin-top:22px;display:none">
+            <div class="note" id="walletNoteText"></div>
+          </div>
+
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" data-go="2">← Back</button>
+            <button class="btn btn-gold" data-go="4">Review reservation →</button>
+          </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section class="panel stepview" data-step="4">
+          <div class="panel-head"><h3>Confirm your reservation</h3></div>
+          <div id="reviewBox"></div>
+          <label class="fld" style="margin-top:20px"><span>Mobile number for chauffeur updates</span><input id="phone" placeholder="+44 7700 900000"></label>
+          <p class="note">Pressing confirm authorises the fare on your payment method and assigns a chauffeur. You can cancel free of charge up to 60 minutes before pickup.</p>
+          <div class="wizard-nav">
+            <button class="btn btn-ghost" data-go="3">← Back</button>
+            <button class="btn btn-gold" id="confirmBtn">Confirm &amp; pay <span id="payAmt"></span></button>
+          </div>
+        </section>
+      </div>
+
+      <!-- SUMMARY -->
+      <aside class="panel summary">
+        <div class="panel-head"><h3>Your journey</h3></div>
+        <div id="sumBox"></div>
+        <div style="margin-top:18px;display:flex;gap:10px;align-items:center">
+          <span class="pulse"></span>
+          <small style="color:var(--txt-mute)">Fixed fare — no surge pricing, no meter</small>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+<script>
+/* ---------- sample locations (production: Google Places autocomplete) ---------- */
+var LOCS = [
+  { id: 'lhr', name: 'Heathrow Airport — Terminal 5', lat: 51.4700, lng: -0.4907 },
+  { id: 'lgw', name: 'Gatwick Airport — North Terminal', lat: 51.1614, lng: -0.1821 },
+  { id: 'lcy', name: 'London City Airport', lat: 51.5048, lng: 0.0495 },
+  { id: 'may', name: 'Mayfair — The Connaught', lat: 51.5099, lng: -0.1494 },
+  { id: 'che', name: 'Chelsea — Sloane Square', lat: 51.4924, lng: -0.1565 },
+  { id: 'cit', name: 'The City — Liverpool Street', lat: 51.5178, lng: -0.0823 },
+  { id: 'cw',  name: 'Canary Wharf — One Canada Square', lat: 51.5049, lng: -0.0195 },
+  { id: 'kns', name: 'Kensington — Royal Albert Hall', lat: 51.5010, lng: -0.1774 },
+  { id: 'stp', name: 'St Pancras International', lat: 51.5308, lng: -0.1261 },
+  { id: 'win', name: 'Windsor — Castle Hotel', lat: 51.4839, lng: -0.6044 }
+];
+
+function opt(sel, def) {
+  sel.innerHTML = LOCS.map(function (l) { return '<option value="' + l.id + '"' + (l.id === def ? ' selected' : '') + '>' + l.name + '</option>'; }).join('');
+}
+var $from = document.getElementById('from'), $to = document.getElementById('to');
+opt($from, 'lhr'); opt($to, 'may');
+
+function loc(id) { return LOCS.filter(function (l) { return l.id === id; })[0]; }
+
+function haversine(a, b) {
+  var R = 6371, dLat = (b.lat - a.lat) * Math.PI / 180, dLng = (b.lng - a.lng) * Math.PI / 180;
+  var s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(a.lat * Math.PI / 180) * Math.cos(b.lat * Math.PI / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s));
+}
+
+/* ---------- defaults ---------- */
+var now = new Date(Date.now() + 2 * 60 * 60 * 1000);
+document.getElementById('date').value = now.toISOString().slice(0, 10);
+document.getElementById('time').value = fmtTime(now);
+
+var state = {
+  from: 'lhr', to: 'may', tier: new URLSearchParams(location.search).get('tier') || 'first',
+  pay: 'card', km: 0, mins: 0
+};
+
+function recalc() {
+  var a = loc($from.value), b = loc($to.value);
+  state.from = $from.value; state.to = $to.value;
+  state.km = Math.max(2, haversine(a, b) * 1.34);
+  state.mins = Math.round(state.km / 30 * 60) + 8;
+  renderTiers(); renderSummary(); renderReview();
+  document.getElementById('routeNote').textContent =
+    Math.round(state.km) + ' km · about ' + state.mins + ' min of driving';
+}
+
+/* ---------- step 2: tiers ---------- */
+function renderTiers() {
+  document.getElementById('tierList').innerHTML = FLEET.map(function (t) {
+    var q = quote(t.id, state.km, state.mins);
+    return '<button class="choice' + (t.id === state.tier ? ' sel' : '') + '" data-tier="' + t.id + '">' +
+      '<span class="thumb" style="display:grid;place-items:center;padding:5px">' + carArt(t.art) + '</span>' +
+      '<span class="meta"><b>' + t.name + '</b><small>' + t.car + ' · ' + t.seats + ' seats · ' + t.bags + ' bags</small></span>' +
+      '<span class="amt">' + money(q.total) + '</span></button>';
+  }).join('');
+}
+document.getElementById('tierList').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-tier]'); if (!b) return;
+  state.tier = b.dataset.tier; renderTiers(); renderSummary(); renderReview();
+});
+
+/* ---------- step 3: payment ---------- */
+var WALLET_COPY = {
+  apple: 'Apple Pay sheet opens on confirm. Face ID or Touch ID authorises the fare — no card entry, no 3-D Secure step.',
+  google: 'Google Pay sheet opens on confirm. The saved card in the customer’s Google account is used; the site never sees the number.',
+  link: 'The customer’s saved wallet is used. Cards are stored by the gateway and shared across every device they sign in on.',
+  account: 'The journey is booked against the corporate account and added to the monthly invoice. Credit limits and approvers are managed from the admin panel.'
+};
+document.getElementById('payList').addEventListener('click', function (e) {
+  var p = e.target.closest('[data-pay]'); if (!p) return;
+  [].forEach.call(this.querySelectorAll('.pay'), function (x) { x.classList.remove('sel'); });
+  p.classList.add('sel'); state.pay = p.dataset.pay;
+  var isCard = state.pay === 'card';
+  document.getElementById('cardFields').style.display = isCard ? '' : 'none';
+  document.getElementById('walletNote').style.display = isCard ? 'none' : '';
+  if (!isCard) document.getElementById('walletNoteText').textContent = WALLET_COPY[state.pay];
+  renderReview();
+});
+document.getElementById('cnum').addEventListener('input', function () {
+  this.value = this.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+});
+document.getElementById('cexp').addEventListener('input', function () {
+  var v = this.value.replace(/\D/g, '');
+  this.value = v.length > 2 ? v.slice(0, 2) + ' / ' + v.slice(2, 4) : v;
+});
+
+/* ---------- summary + review ---------- */
+function tierObj() { return FLEET.filter(function (t) { return t.id === state.tier; })[0]; }
+function payLabel() {
+  return { card: 'Credit / debit card', apple: 'Apple Pay', google: 'Google Pay', link: 'Wallet (Link)', account: 'Corporate account' }[state.pay];
+}
+function pickupDate() {
+  var d = new Date(document.getElementById('date').value + 'T' + (document.getElementById('time').value || '09:00'));
+  return isNaN(d) ? new Date() : d;
+}
+
+function renderSummary() {
+  var t = tierObj(), q = quote(state.tier, state.km, state.mins), d = pickupDate();
+  document.getElementById('sumBox').innerHTML =
+    '<div style="display:grid;place-items:center;padding:6px 0 14px">' + carArt(t.art, '150') + '</div>' +
+    '<div class="sum-line"><span>Vehicle</span><span>' + t.name + '</span></div>' +
+    '<div class="sum-line"><span>Pickup</span><span style="text-align:right">' + loc($from.value).name + '</span></div>' +
+    '<div class="sum-line"><span>Destination</span><span style="text-align:right">' + loc($to.value).name + '</span></div>' +
+    '<div class="sum-line"><span>When</span><span>' + fmtDate(d) + ' · ' + fmtTime(d) + '</span></div>' +
+    '<div class="sum-line"><span>Distance</span><span>' + Math.round(state.km) + ' km · ' + state.mins + ' min</span></div>' +
+    '<div class="sum-line"><span>Base fare</span><span>' + money(t.base) + '</span></div>' +
+    '<div class="sum-line"><span>Distance &amp; time</span><span>' + money(q.total - t.base) + '</span></div>' +
+    '<div class="sum-line total"><span>Total</span><span>' + money(q.total) + '</span></div>';
+  document.getElementById('payAmt').textContent = money(q.total);
+}
+
+function renderReview() {
+  var t = tierObj(), q = quote(state.tier, state.km, state.mins), d = pickupDate();
+  document.getElementById('reviewBox').innerHTML =
+    '<div class="sum-line"><span>Journey</span><span style="text-align:right">' + loc($from.value).name + ' → ' + loc($to.value).name + '</span></div>' +
+    '<div class="sum-line"><span>Pickup</span><span>' + fmtDate(d) + ' at ' + fmtTime(d) + '</span></div>' +
+    '<div class="sum-line"><span>Vehicle</span><span>' + t.name + ' — ' + t.car + '</span></div>' +
+    '<div class="sum-line"><span>Passengers / luggage</span><span>' + document.getElementById('pax').value + ' · ' + document.getElementById('bags').value + '</span></div>' +
+    '<div class="sum-line"><span>Payment method</span><span>' + payLabel() + '</span></div>' +
+    '<div class="sum-line total"><span>Amount due</span><span>' + money(q.total) + '</span></div>';
+}
+
+/* ---------- wizard nav ---------- */
+function goto(n) {
+  [].forEach.call(document.querySelectorAll('.stepview'), function (s) { s.classList.toggle('on', s.dataset.step == n); });
+  [].forEach.call(document.querySelectorAll('.progress i'), function (i) { i.classList.toggle('done', i.dataset.p <= n); });
+  [].forEach.call(document.querySelectorAll('.progress-labels span'), function (s) { s.classList.toggle('on', s.dataset.l == n); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-go]'); if (!b) return;
+  if (b.dataset.go == '2' || b.dataset.go == '4') recalc();
+  goto(b.dataset.go);
+});
+['change', 'input'].forEach(function (ev) {
+  ['from', 'to', 'date', 'time', 'pax', 'bags'].forEach(function (id) {
+    document.getElementById(id).addEventListener(ev, recalc);
+  });
+});
+
+/* ---------- confirm ---------- */
+document.getElementById('confirmBtn').addEventListener('click', function () {
+  var btn = this, t = tierObj(), q = quote(state.tier, state.km, state.mins), d = pickupDate();
+  btn.disabled = true; btn.textContent = 'Authorising payment…';
+  setTimeout(function () {
+    btn.textContent = 'Assigning your chauffeur…';
+    setTimeout(function () {
+      BK.set({
+        ref: makeRef(),
+        from: loc($from.value), to: loc($to.value),
+        tier: t.id, tierName: t.name, car: t.car, art: t.art,
+        km: Math.round(state.km), mins: state.mins,
+        total: q.total, pay: payLabel(),
+        pax: document.getElementById('pax').value,
+        bags: document.getElementById('bags').value,
+        flight: document.getElementById('flight').value,
+        notes: document.getElementById('notes').value,
+        phone: document.getElementById('phone').value,
+        when: d.toISOString(),
+        placed: new Date().toISOString()
+      });
+      location.href = 'track.html';
+    }, 900);
+  }, 1100);
+});
+
+recalc();
+if (state.tier) renderTiers();
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your ride — live tracking — Noir Chauffeur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div class="demo-ribbon">DEMO BUILD — the car below is simulated so you can watch a full journey in about a minute. In production the position comes from the driver app.</div>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">N</span><span class="brand-name">NOIR<small>Chauffeur</small></span></a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="book.html">Book</a>
+      <a href="track.html" class="on">Track</a>
+      <a href="rate.html">Rate</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Menu">☰</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="wrap">
+
+    <div class="page-head">
+      <span class="eyebrow" id="refLine">Reservation confirmed</span>
+      <h1 id="headline">Your chauffeur is on the way</h1>
+    </div>
+
+    <div class="eta-strip">
+      <span class="pulse"></span>
+      <div><small style="display:block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-mute)">Arriving in</small>
+        <span class="big" id="eta">6 min</span></div>
+      <div class="sep"></div>
+      <div><small style="display:block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-mute)">Status</small>
+        <b id="statusTxt">En route to pickup</b></div>
+      <div class="sep"></div>
+      <div><small style="display:block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-mute)">Fare (paid)</small>
+        <b id="fareTxt">—</b></div>
+      <button class="btn btn-ghost btn-sm" id="ffBtn" style="margin-left:auto">⏩ Fast-forward demo</button>
+    </div>
+
+    <div class="grid-2" style="grid-template-columns:1.6fr 1fr;align-items:start">
+      <div class="panel" style="padding:14px">
+        <div id="map"></div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-head"><h3>Your chauffeur</h3><span class="pill live" id="livePill">LIVE</span></div>
+          <div class="driver-card">
+            <span class="ph">MA</span>
+            <div class="d-meta">
+              <b>Marcus A.</b>
+              <small class="stars">★★★★★ 4.94 · 1,208 trips</small>
+              <span class="plate" id="plate">LX24 NCH</span>
+            </div>
+          </div>
+          <div id="carLine" style="display:grid;place-items:center;padding:14px 0 6px"></div>
+          <p style="font-size:.86rem;margin:0" id="carTxt">Mercedes-Benz S-Class · Obsidian black</p>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-ghost btn-sm btn-block" onclick="alert('Demo: opens an in-app masked call to the chauffeur. Real numbers stay private on both sides.')">Call</button>
+            <button class="btn btn-ghost btn-sm btn-block" onclick="alert('Demo: opens the in-app chat with the chauffeur.')">Message</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Journey</h3></div>
+          <ul class="timeline" id="timeline">
+            <li class="done"><b>Reservation confirmed</b><small id="tBooked">Payment authorised</small></li>
+            <li class="done"><b>Chauffeur assigned</b><small>Marcus A. accepted your booking</small></li>
+            <li class="now"><b>En route to pickup</b><small id="tPickup">Heading to your pickup point</small></li>
+            <li><b>Chauffeur arrived</b><small>Waiting at the pickup point</small></li>
+            <li><b>On the way</b><small>Journey in progress</small></li>
+            <li><b>Completed</b><small>Rate your chauffeur</small></li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Booking details</h3></div>
+          <div id="details"></div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <a class="btn btn-ghost btn-sm btn-block" href="book.html">New booking</a>
+            <a class="btn btn-gold btn-sm btn-block" href="rate.html" id="rateBtn" style="display:none">Rate this trip</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:22px">
+      Same tracker appears inside the customer dashboard and is sent as a link by SMS, so a passenger can follow the car without logging in.
+    </p>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ---------- load booking (or fall back to a sample one) ---------- */
+var b = BK.get();
+if (!b.ref) {
+  b = {
+    ref: 'NC-DEMO47', tierName: 'First Class', car: 'Mercedes-Benz S-Class', art: 'sedan-long',
+    from: { name: 'Heathrow Airport — Terminal 5', lat: 51.4700, lng: -0.4907 },
+    to:   { name: 'Mayfair — The Connaught', lat: 51.5099, lng: -0.1494 },
+    km: 34, mins: 46, total: 175.30, pay: 'Apple Pay', pax: '2', bags: '2',
+    when: new Date(Date.now() + 20 * 60000).toISOString(), placed: new Date().toISOString()
+  };
+}
+
+document.getElementById('refLine').textContent = 'Reference ' + b.ref + ' · paid with ' + (b.pay || 'card');
+document.getElementById('fareTxt').textContent = money(b.total || 0);
+document.getElementById('carTxt').textContent = b.car + ' · Obsidian black';
+document.getElementById('carLine').innerHTML = carArt(b.art || 'sedan-long', '190');
+document.getElementById('tBooked').textContent = 'Payment authorised · ' + money(b.total || 0);
+
+var when = new Date(b.when);
+document.getElementById('details').innerHTML =
+  '<div class="sum-line"><span>Pickup</span><span style="text-align:right">' + b.from.name + '</span></div>' +
+  '<div class="sum-line"><span>Destination</span><span style="text-align:right">' + b.to.name + '</span></div>' +
+  '<div class="sum-line"><span>Scheduled</span><span>' + fmtDate(when) + ' · ' + fmtTime(when) + '</span></div>' +
+  '<div class="sum-line"><span>Vehicle</span><span>' + b.tierName + '</span></div>' +
+  '<div class="sum-line"><span>Passengers</span><span>' + (b.pax || 2) + ' · ' + (b.bags || 2) + ' bags</span></div>' +
+  '<div class="sum-line total"><span>Paid</span><span>' + money(b.total || 0) + '</span></div>';
+
+/* ---------- map ---------- */
+var map = L.map('map', { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+function pin(cls, glyph) {
+  return L.divIcon({ className: '', html: '<div class="pin ' + cls + '">' + glyph + '</div>', iconSize: [30, 30], iconAnchor: [15, 15] });
+}
+
+var A = [b.from.lat, b.from.lng], B = [b.to.lat, b.to.lng];
+/* driver starts a short way from the pickup point */
+var D0 = [A[0] + (A[0] - B[0]) * 0.06 + 0.012, A[1] + (A[1] - B[1]) * 0.06 - 0.01];
+
+/* build a slightly curved polyline so it reads like a road, not a ruler line */
+function path(p, q, bend, n) {
+  var out = [], mx = (p[0] + q[0]) / 2 + (q[1] - p[1]) * bend, my = (p[1] + q[1]) / 2 - (q[0] - p[0]) * bend;
+  for (var i = 0; i <= n; i++) {
+    var t = i / n, u = 1 - t;
+    out.push([u * u * p[0] + 2 * u * t * mx + t * t * q[0], u * u * p[1] + 2 * u * t * my + t * t * q[1]]);
+  }
+  return out;
+}
+var legApproach = path(D0, A, 0.16, 40);
+var legMain = path(A, B, 0.10, 90);
+
+L.polyline(legApproach, { color: '#e8c766', weight: 3, opacity: 0.45, dashArray: '6 8' }).addTo(map);
+var mainLine = L.polyline(legMain, { color: '#e8c766', weight: 4, opacity: 0.28 }).addTo(map);
+var doneLine = L.polyline([], { color: '#e8c766', weight: 5, opacity: 0.95 }).addTo(map);
+
+L.marker(A, { icon: pin('a', 'A') }).addTo(map).bindPopup('Pickup · ' + b.from.name);
+L.marker(B, { icon: pin('b', 'B') }).addTo(map).bindPopup('Destination · ' + b.to.name);
+var carM = L.marker(D0, { icon: pin('car', '▲'), zIndexOffset: 500 }).addTo(map);
+
+map.fitBounds(L.latLngBounds(legApproach.concat(legMain)), { padding: [40, 40] });
+
+/* ---------- simulation ---------- */
+var STAGES = [
+  { key: 'approach', label: 'En route to pickup', head: 'Your chauffeur is on the way', li: 2 },
+  { key: 'arrived',  label: 'Chauffeur arrived',  head: 'Your chauffeur is waiting',    li: 3 },
+  { key: 'moving',   label: 'On the way',         head: 'You are on your way',          li: 4 },
+  { key: 'done',     label: 'Trip completed',     head: 'You have arrived',             li: 5 }
+];
+var stage = 0, i = 0, tick = 900, waitTicks = 0;
+var totalMins = b.mins || 40;
+
+function setStage(n) {
+  stage = n;
+  var s = STAGES[n];
+  document.getElementById('statusTxt').textContent = s.label;
+  document.getElementById('headline').textContent = s.head;
+  var lis = document.getElementById('timeline').children;
+  for (var k = 0; k < lis.length; k++) {
+    lis[k].classList.remove('now');
+    lis[k].classList.toggle('done', k < s.li);
+  }
+  if (s.li < lis.length) { lis[s.li].classList.add('now'); lis[s.li].classList.remove('done'); }
+  if (s.key === 'done') {
+    for (var k2 = 0; k2 < lis.length; k2++) lis[k2].classList.add('done');
+    document.getElementById('livePill').textContent = 'COMPLETED';
+    document.getElementById('livePill').className = 'pill done';
+    document.getElementById('eta').textContent = 'Arrived';
+    document.getElementById('rateBtn').style.display = '';
+    BK.set({ completed: true });
+  }
+}
+setStage(0);
+
+function step() {
+  if (stage === 0) {
+    i++;
+    if (i >= legApproach.length) { i = 0; setStage(1); waitTicks = 4; document.getElementById('eta').textContent = 'Now'; return; }
+    carM.setLatLng(legApproach[i]);
+    var left = Math.max(1, Math.round((legApproach.length - i) / legApproach.length * 7));
+    document.getElementById('eta').textContent = left + ' min';
+  } else if (stage === 1) {
+    if (--waitTicks <= 0) { setStage(2); i = 0; }
+  } else if (stage === 2) {
+    i++;
+    if (i >= legMain.length) { setStage(3); return; }
+    carM.setLatLng(legMain[i]);
+    doneLine.setLatLngs(legMain.slice(0, i + 1));
+    var leftM = Math.max(1, Math.round((legMain.length - i) / legMain.length * totalMins));
+    document.getElementById('eta').textContent = leftM + ' min';
+  }
+}
+var timer = setInterval(step, tick);
+
+document.getElementById('ffBtn').addEventListener('click', function () {
+  clearInterval(timer);
+  tick = tick === 900 ? 120 : 900;
+  this.textContent = tick === 120 ? '⏸ Normal speed' : '⏩ Fast-forward demo';
+  timer = setInterval(step, tick);
+});
+
+/* keep the car in view without fighting the user */
+map.on('movestart', function () { follow = false; });
+var follow = true;
+setInterval(function () { if (follow && stage === 2) map.panTo(carM.getLatLng(), { animate: true, duration: 0.6 }); }, 3000);
+</script>
+</body>
+</html>

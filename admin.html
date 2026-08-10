@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operations — Noir Chauffeur Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<div class="demo-ribbon">DEMO BUILD — sample operational data. Pricing edits, driver toggles and CSV export all work in this demo.</div>
+
+<div class="admin-shell">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <a class="brand" href="index.html"><span class="brand-mark">N</span><span class="brand-name">NOIR<small>Admin</small></span></a>
+    <nav id="nav">
+      <a class="on" data-v="dash">◧ Dashboard</a>
+      <a data-v="live">◎ Live trips</a>
+      <a data-v="bookings">▤ Bookings</a>
+      <div class="side-lab">Operations</div>
+      <a data-v="drivers">⚇ Drivers &amp; fleet</a>
+      <a data-v="pricing">£ Pricing</a>
+      <a data-v="reviews">★ Ratings &amp; reviews</a>
+      <div class="side-lab">Business</div>
+      <a data-v="reports">⇩ Reports &amp; exports</a>
+      <a data-v="settings">⚙ Payments &amp; settings</a>
+    </nav>
+    <div style="margin-top:26px;padding:14px;border-radius:12px;background:var(--bg-card);border:1px solid var(--line)">
+      <div class="who"><span class="avatar">OW</span><div><b>Owner</b><span>Full access</span></div></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD -->
+    <section data-view="dash">
+      <div class="admin-top">
+        <h2>Today at a glance</h2>
+        <a class="btn btn-ghost btn-sm" href="index.html">View website ↗</a>
+        <button class="btn btn-gold btn-sm" data-jump="reports">Export today's report</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><small>Revenue today</small><b>£4,182</b><span class="delta">▲ 12.4% vs last Tue</span></div>
+        <div class="kpi"><small>Trips completed</small><b>38</b><span class="delta">▲ 6 trips</span></div>
+        <div class="kpi"><small>Live right now</small><b>5</b><span class="delta">3 en route · 2 with passenger</span></div>
+        <div class="kpi"><small>Average rating</small><b>4.91</b><span class="delta down">▼ 0.02</span></div>
+      </div>
+
+      <div class="grid-2" style="grid-template-columns:1.5fr 1fr;align-items:start">
+        <div class="panel">
+          <div class="panel-head"><h3>Revenue — last 14 days</h3><small style="color:var(--txt-mute)">£32,940 total</small></div>
+          <div class="spark" id="spark"></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--txt-mute);margin-top:10px"><span>28 Jul</span><span>Today</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Fleet utilisation</h3></div>
+          <div class="bars" id="util"></div>
+          <p class="note" style="margin-top:16px">Utilisation is trips ÷ available chauffeur hours per tier. Anything under 40% usually means too many cars on that tier for the demand.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Live &amp; upcoming</h3><button class="btn btn-ghost btn-sm" data-jump="live">Open live map</button></div>
+        <div class="table-scroll"><table id="tripTable"></table></div>
+      </div>
+    </section>
+
+    <!-- LIVE -->
+    <section data-view="live" hidden>
+      <div class="admin-top"><h2>Live trips</h2><span class="pill live">5 vehicles on the road</span></div>
+      <div class="grid-2" style="grid-template-columns:1.6fr 1fr;align-items:start">
+        <div class="panel" style="padding:14px"><div class="map-box" id="opsMap"></div></div>
+        <div class="panel">
+          <div class="panel-head"><h3>Vehicles</h3></div>
+          <div id="vehList"></div>
+          <p class="note" style="margin-top:14px">Positions stream from the driver app over websockets and are replayed on the customer's tracking page.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOOKINGS -->
+    <section data-view="bookings" hidden>
+      <div class="admin-top">
+        <h2>Bookings</h2>
+        <input id="bkSearch" placeholder="Search reference, customer or route…" style="max-width:320px">
+        <button class="btn btn-ghost btn-sm" data-csv="bookings">⇩ CSV</button>
+      </div>
+      <div class="panel"><div class="table-scroll"><table id="bkTable"></table></div></div>
+    </section>
+
+    <!-- DRIVERS -->
+    <section data-view="drivers" hidden>
+      <div class="admin-top">
+        <h2>Drivers &amp; fleet</h2>
+        <button class="btn btn-gold btn-sm" id="addDriver">+ Add chauffeur</button>
+        <button class="btn btn-ghost btn-sm" data-csv="drivers">⇩ CSV</button>
+      </div>
+      <div class="panel">
+        <p class="note" style="margin-bottom:18px">Toggle a chauffeur off and they immediately stop receiving new jobs — trips already assigned are untouched. Licence and insurance expiry dates flag themselves 30 days out.</p>
+        <div class="table-scroll"><table id="drvTable"></table></div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section data-view="pricing" hidden>
+      <div class="admin-top"><h2>Pricing</h2><button class="btn btn-gold btn-sm" id="savePricing">Save changes</button></div>
+      <div class="panel">
+        <div class="panel-head"><h3>Per-tier rates</h3><small style="color:var(--txt-mute)">Changes apply to new quotes instantly</small></div>
+        <div class="table-scroll"><table id="priceTable"></table></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Surcharges &amp; rules</h3></div>
+        <div class="grid-2">
+          <label class="fld"><span>Airport meet &amp; greet</span><input value="15.00"></label>
+          <label class="fld"><span>Night surcharge 23:00–05:00 (%)</span><input value="15"></label>
+          <label class="fld"><span>Waiting time after free period (£/min)</span><input value="0.80"></label>
+          <label class="fld"><span>Free wait — airports (min)</span><input value="60"></label>
+          <label class="fld"><span>Free wait — all other pickups (min)</span><input value="15"></label>
+          <label class="fld"><span>Cancellation window (min before pickup)</span><input value="60"></label>
+        </div>
+        <div style="display:flex;gap:22px;flex-wrap:wrap;margin-top:6px">
+          <label style="display:flex;gap:10px;align-items:center;font-size:.88rem"><span class="switch on" data-sw></span> Hourly hire enabled</label>
+          <label style="display:flex;gap:10px;align-items:center;font-size:.88rem"><span class="switch on" data-sw></span> Corporate accounts</label>
+          <label style="display:flex;gap:10px;align-items:center;font-size:.88rem"><span class="switch" data-sw></span> Allow gratuities at checkout</label>
+        </div>
+      </div>
+      <div id="priceToast" class="panel" style="display:none;border-color:var(--gold-deep)">
+        <b class="gold">Saved.</b> <span style="color:var(--txt-soft)">New quotes on the website use these rates from now on — reload the booking page to see them.</span>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section data-view="reviews" hidden>
+      <div class="admin-top"><h2>Ratings &amp; reviews</h2><span class="pill pend" id="flagCount">1 needs attention</span></div>
+      <div class="grid-2" style="grid-template-columns:1fr 1.4fr;align-items:start">
+        <div class="panel">
+          <div class="panel-head"><h3>Fleet average</h3></div>
+          <div class="rating-summary">
+            <div style="text-align:center"><div class="rating-big">4.91</div><div class="stars">★★★★★</div><small style="color:var(--txt-mute)">3,417 ratings</small></div>
+            <div class="bars" id="rvBars"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Latest reviews</h3><button class="btn btn-ghost btn-sm" data-csv="reviews">⇩ CSV</button></div>
+          <div id="rvList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REPORTS -->
+    <section data-view="reports" hidden>
+      <div class="admin-top"><h2>Reports &amp; exports</h2></div>
+      <div class="panel">
+        <div class="grid-2">
+          <label class="fld"><span>From</span><input type="date" id="rFrom"></label>
+          <label class="fld"><span>To</span><input type="date" id="rTo"></label>
+        </div>
+        <label class="fld"><span>Report</span>
+          <select id="rType">
+            <option value="bookings">Bookings &amp; revenue</option>
+            <option value="drivers">Chauffeur performance</option>
+            <option value="reviews">Ratings &amp; reviews</option>
+            <option value="payouts">Driver payouts</option>
+          </select>
+        </label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-gold" id="dlCsv">⇩ Download CSV</button>
+          <button class="btn btn-ghost" onclick="alert('Demo: the same dataset renders as a branded PDF for accountants.')">⇩ PDF summary</button>
+          <button class="btn btn-ghost" onclick="alert('Demo: schedules this report to email itself every Monday at 07:00.')">✉ Schedule weekly</button>
+        </div>
+        <p class="note" style="margin-top:18px">The CSV button really downloads a file — open it to see the column layout.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Preview</h3></div>
+        <div class="table-scroll"><table id="rvwTable"></table></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section data-view="settings" hidden>
+      <div class="admin-top"><h2>Payments &amp; settings</h2></div>
+      <div class="grid-2" style="align-items:start">
+        <div class="panel">
+          <div class="panel-head"><h3>Payment gateway</h3><span class="pill live">Connected</span></div>
+          <div class="sum-line"><span>Provider</span><span>Stripe — live mode</span></div>
+          <div class="sum-line"><span>Card payments</span><span class="gold">Enabled</span></div>
+          <div class="sum-line"><span>Apple Pay</span><span class="gold">Enabled · domain verified</span></div>
+          <div class="sum-line"><span>Google Pay</span><span class="gold">Enabled</span></div>
+          <div class="sum-line"><span>Wallet / Link</span><span class="gold">Enabled</span></div>
+          <div class="sum-line"><span>Payout schedule</span><span>Daily, 2-day rolling</span></div>
+          <p class="note" style="margin-top:16px">Keys live in the server environment file, never in the database or theme. Swapping test keys for live keys is a two-line change covered in the handover doc.</p>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Operational</h3></div>
+          <div style="display:grid;gap:16px">
+            <label style="display:flex;gap:12px;align-items:center;font-size:.9rem"><span class="switch on" data-sw></span> Accept new bookings</label>
+            <label style="display:flex;gap:12px;align-items:center;font-size:.9rem"><span class="switch on" data-sw></span> SMS updates to passengers</label>
+            <label style="display:flex;gap:12px;align-items:center;font-size:.9rem"><span class="switch on" data-sw></span> Email confirmation &amp; receipt</label>
+            <label style="display:flex;gap:12px;align-items:center;font-size:.9rem"><span class="switch on" data-sw></span> Flight tracking for airport pickups</label>
+            <label style="display:flex;gap:12px;align-items:center;font-size:.9rem"><span class="switch" data-sw></span> Maintenance mode</label>
+          </div>
+          <div class="grid-2" style="margin-top:20px">
+            <label class="fld"><span>Booking lead time (min)</span><input value="90"></label>
+            <label class="fld"><span>Operating radius (km)</span><input value="120"></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="assets/app.js"></script>
+<script>
+/* ---------- view switching ---------- */
+function show(v) {
+  [].forEach.call(document.querySelectorAll('[data-view]'), function (s) { s.hidden = s.dataset.view !== v; });
+  [].forEach.call(document.querySelectorAll('#nav a'), function (a) { a.classList.toggle('on', a.dataset.v === v); });
+  window.scrollTo(0, 0);
+  if (v === 'live') setTimeout(function () { if (opsMap) opsMap.invalidateSize(); }, 60);
+}
+document.getElementById('nav').addEventListener('click', function (e) {
+  var a = e.target.closest('a[data-v]'); if (a) show(a.dataset.v);
+});
+document.addEventListener('click', function (e) {
+  var j = e.target.closest('[data-jump]'); if (j) show(j.dataset.jump);
+  var sw = e.target.closest('[data-sw]'); if (sw) sw.classList.toggle('on');
+});
+
+/* ---------- sample data ---------- */
+var TRIPS = [
+  { ref: 'NC-4KP2XA', cust: 'H. Rasmussen', route: 'Heathrow T5 → Mayfair',      tier: 'First Class',    drv: 'Marcus A.',  when: '09:40', fare: 175.30, st: 'live' },
+  { ref: 'NC-9RTM4C', cust: 'D. Mercer',    route: 'Liverpool St → Canary Wharf', tier: 'Executive',      drv: 'Idris K.',   when: '10:05', fare: 62.80,  st: 'live' },
+  { ref: 'NC-7WQL3D', cust: 'Ashcroft LLP', route: 'Mayfair → Windsor',           tier: 'Business Van',   drv: 'Petra V.',   when: '10:30', fare: 214.60, st: 'live' },
+  { ref: 'NC-2HJY8F', cust: 'S. Aliyev',    route: 'Chelsea → Gatwick North',     tier: 'Luxury SUV',     drv: 'Tomas L.',   when: '11:15', fare: 198.40, st: 'live' },
+  { ref: 'NC-6CDN5K', cust: 'J. Pettersen', route: 'St Pancras → Kensington',     tier: 'Executive',      drv: 'Marcus A.',  when: '12:00', fare: 54.20,  st: 'pend' },
+  { ref: 'NC-3XKA7P', cust: 'R. Oyelaran',  route: 'City Airport → The City',     tier: 'First Class',    drv: 'Idris K.',   when: '13:20', fare: 96.10,  st: 'pend' },
+  { ref: 'NC-8LMF2R', cust: 'T. Bianchi',   route: 'Mayfair → Heathrow T3',       tier: 'First Class',    drv: 'Petra V.',   when: '07:10', fare: 168.90, st: 'done' },
+  { ref: 'NC-5NVD9T', cust: 'K. Osei',      route: 'Windsor → Kensington',        tier: 'Luxury SUV',     drv: 'Tomas L.',   when: '06:35', fare: 187.00, st: 'done' },
+  { ref: 'NC-1QWE4Y', cust: 'M. Lindqvist', route: 'Canary Wharf → Gatwick',      tier: 'Business Van',   drv: 'Sana R.',    when: '05:50', fare: 232.40, st: 'done' }
+];
+
+var DRIVERS = [
+  { n: 'Marcus A.',  i: 'MA', tier: 'First Class',   plate: 'LX24 NCH', trips: 1208, rate: 4.94, lic: '14 Mar 2028', on: true },
+  { n: 'Idris K.',   i: 'IK', tier: 'Executive',     plate: 'LB23 KDR', trips: 864,  rate: 4.89, lic: '02 Sep 2027', on: true },
+  { n: 'Petra V.',   i: 'PV', tier: 'Business Van',  plate: 'LM24 PVN', trips: 501,  rate: 4.97, lic: '21 Jan 2029', on: true },
+  { n: 'Tomas L.',   i: 'TL', tier: 'Luxury SUV',    plate: 'LG22 TLS', trips: 733,  rate: 4.81, lic: '30 Nov 2026', on: true },
+  { n: 'Sana R.',    i: 'SR', tier: 'Executive',     plate: 'LN23 SRA', trips: 412,  rate: 4.92, lic: '18 Jun 2027', on: true },
+  { n: 'Victor B.',  i: 'VB', tier: 'First Class',   plate: 'LK21 VBR', trips: 1590, rate: 4.63, lic: '05 Feb 2026', on: false }
+];
+
+var RV = [
+  { n: 'Helena R.', drv: 'Marcus A.', s: 5, t: 'Car was waiting before I cleared customs. Faultless.', w: '2 h ago' },
+  { n: 'Daniel M.', drv: 'Idris K.',  s: 5, t: 'Knows every office entrance in the City. Never late.', w: '5 h ago' },
+  { n: 'Sofia A.',  drv: 'Tomas L.',  s: 4, t: 'Immaculate car, helped with both cases.', w: 'Yesterday' },
+  { n: 'Ben H.',    drv: 'Victor B.', s: 2, t: 'Car arrived 20 minutes late and the AC was not working.', w: 'Yesterday' },
+  { n: 'James P.',  drv: 'Petra V.',  s: 5, t: 'Van set up as a mobile meeting room. Exactly what we needed.', w: '2 days ago' }
+];
+
+/* ---------- dashboard ---------- */
+document.getElementById('spark').innerHTML =
+  [58, 71, 44, 82, 96, 63, 78, 88, 52, 91, 74, 99, 86, 100].map(function (v) {
+    return '<i style="height:' + v + '%" title="£' + (v * 26) + '"></i>';
+  }).join('');
+
+document.getElementById('util').innerHTML = [
+  ['First Class', 78], ['Executive', 64], ['Luxury SUV', 51], ['Business Van', 37]
+].map(function (r) {
+  return '<div class="bar-row"><span style="width:92px">' + r[0] + '</span><span class="bar"><i style="width:' + r[1] + '%"></i></span><span>' + r[1] + '%</span></div>';
+}).join('');
+
+function pill(st) {
+  return { live: '<span class="pill live">Live</span>', pend: '<span class="pill pend">Scheduled</span>', done: '<span class="pill done">Completed</span>' }[st];
+}
+function tripRows(list) {
+  return '<thead><tr><th>Ref</th><th>Customer</th><th>Route</th><th>Tier</th><th>Chauffeur</th><th>Pickup</th><th>Fare</th><th>Status</th></tr></thead><tbody>' +
+    list.map(function (t) {
+      return '<tr><td style="font-family:monospace;color:var(--gold)">' + t.ref + '</td><td>' + t.cust + '</td><td>' + t.route +
+        '</td><td>' + t.tier + '</td><td>' + t.drv + '</td><td>' + t.when + '</td><td>' + money(t.fare) + '</td><td>' + pill(t.st) + '</td></tr>';
+    }).join('') + '</tbody>';
+}
+document.getElementById('tripTable').innerHTML = tripRows(TRIPS.slice(0, 6));
+
+/* ---------- bookings ---------- */
+function drawBookings(q) {
+  var list = TRIPS.filter(function (t) {
+    if (!q) return true;
+    return (t.ref + t.cust + t.route + t.drv).toLowerCase().indexOf(q.toLowerCase()) > -1;
+  });
+  document.getElementById('bkTable').innerHTML = tripRows(list);
+}
+drawBookings('');
+document.getElementById('bkSearch').addEventListener('input', function () { drawBookings(this.value); });
+
+/* ---------- drivers ---------- */
+function drawDrivers() {
+  document.getElementById('drvTable').innerHTML =
+    '<thead><tr><th>Chauffeur</th><th>Assigned tier</th><th>Plate</th><th>Trips</th><th>Rating</th><th>Licence expiry</th><th>Accepting jobs</th><th></th></tr></thead><tbody>' +
+    DRIVERS.map(function (d, k) {
+      return '<tr><td><div class="who"><span class="avatar">' + d.i + '</span><div><b>' + d.n + '</b><span>' + (d.on ? 'Active' : 'Deactivated') + '</span></div></div></td>' +
+        '<td>' + d.tier + '</td><td><span class="plate">' + d.plate + '</span></td><td>' + d.trips.toLocaleString() + '</td>' +
+        '<td class="stars">★ ' + d.rate.toFixed(2) + '</td><td>' + d.lic + '</td>' +
+        '<td><span class="switch' + (d.on ? ' on' : '') + '" data-drv="' + k + '"></span></td>' +
+        '<td><button class="btn btn-ghost btn-sm" data-edit="' + k + '">Edit</button></td></tr>';
+    }).join('') + '</tbody>';
+}
+drawDrivers();
+document.getElementById('drvTable').addEventListener('click', function (e) {
+  var s = e.target.closest('[data-drv]');
+  if (s) { var d = DRIVERS[+s.dataset.drv]; d.on = !d.on; drawDrivers(); return; }
+  var b = e.target.closest('[data-edit]');
+  if (b) alert('Demo: opens the chauffeur record — photo, licence & insurance documents, vehicle assignment, payout details and trip history.');
+});
+document.getElementById('addDriver').addEventListener('click', function () {
+  var n = prompt('Chauffeur name?', 'New Chauffeur');
+  if (!n) return;
+  DRIVERS.push({ n: n, i: n.slice(0, 2).toUpperCase(), tier: 'Executive', plate: 'NEW 001', trips: 0, rate: 0, lic: '—', on: true });
+  drawDrivers();
+});
+
+/* ---------- pricing (writes back to the live quote engine) ---------- */
+function drawPricing() {
+  document.getElementById('priceTable').innerHTML =
+    '<thead><tr><th>Tier</th><th>Vehicle</th><th>Base fare (£)</th><th>Per km (£)</th><th>Per min (£)</th><th>Seats</th><th>Bookable</th></tr></thead><tbody>' +
+    FLEET.map(function (t, k) {
+      return '<tr><td><b>' + t.name + '</b></td><td>' + t.car + '</td>' +
+        '<td><input style="width:100px" value="' + t.base.toFixed(2) + '" data-f="base" data-k="' + k + '"></td>' +
+        '<td><input style="width:100px" value="' + t.perKm.toFixed(2) + '" data-f="perKm" data-k="' + k + '"></td>' +
+        '<td><input style="width:100px" value="' + t.perMin.toFixed(2) + '" data-f="perMin" data-k="' + k + '"></td>' +
+        '<td>' + t.seats + '</td><td><span class="switch on" data-sw></span></td></tr>';
+    }).join('') + '</tbody>';
+}
+drawPricing();
+document.getElementById('savePricing').addEventListener('click', function () {
+  [].forEach.call(document.querySelectorAll('#priceTable input'), function (inp) {
+    var v = parseFloat(inp.value); if (!isNaN(v)) FLEET[+inp.dataset.k][inp.dataset.f] = v;
+  });
+  try { localStorage.setItem('noir_pricing', JSON.stringify(FLEET)); } catch (e) {}
+  document.getElementById('priceToast').style.display = '';
+  setTimeout(function () { document.getElementById('priceToast').style.display = 'none'; }, 4000);
+});
+
+/* ---------- reviews ---------- */
+document.getElementById('rvBars').innerHTML = [2960, 340, 78, 25, 14].map(function (c, k) {
+  return '<div class="bar-row"><span>' + (5 - k) + '★</span><span class="bar"><i style="width:' + (c / 3417 * 100) + '%"></i></span><span>' + c.toLocaleString() + '</span></div>';
+}).join('');
+document.getElementById('rvList').innerHTML = RV.map(function (r) {
+  var low = r.s <= 3;
+  return '<div style="padding:14px 0;border-top:1px solid var(--line)">' +
+    '<div class="who" style="margin-bottom:6px"><span class="avatar">' + r.n.slice(0, 1) + '</span>' +
+    '<div><b>' + r.n + '</b><span>' + r.drv + ' · ' + r.w + '</span></div>' +
+    '<span class="stars" style="margin-left:auto">★ ' + r.s + '</span></div>' +
+    '<p style="margin:0 0 8px;font-size:.9rem">' + r.t + '</p>' +
+    (low ? '<span class="pill pend">Ticket opened automatically</span> <button class="btn btn-ghost btn-sm" onclick="alert(\'Demo: opens the service ticket — contact the customer, credit the fare, or note it against the chauffeur.\')">Resolve</button>' : '') +
+    '</div>';
+}).join('');
+
+/* ---------- reports + real CSV export ---------- */
+var today = new Date();
+document.getElementById('rTo').value = today.toISOString().slice(0, 10);
+document.getElementById('rFrom').value = new Date(today.getTime() - 29 * 86400000).toISOString().slice(0, 10);
+
+function csvFor(type) {
+  if (type === 'drivers') {
+    return [['Chauffeur', 'Tier', 'Plate', 'Trips', 'Rating', 'Licence expiry', 'Status']].concat(
+      DRIVERS.map(function (d) { return [d.n, d.tier, d.plate, d.trips, d.rate, d.lic, d.on ? 'Active' : 'Deactivated']; }));
+  }
+  if (type === 'reviews') {
+    return [['Customer', 'Chauffeur', 'Stars', 'Review', 'When']].concat(
+      RV.map(function (r) { return [r.n, r.drv, r.s, r.t, r.w]; }));
+  }
+  if (type === 'payouts') {
+    return [['Chauffeur', 'Trips', 'Gross', 'Commission 20%', 'Net payout']].concat(
+      DRIVERS.filter(function (d) { return d.on; }).map(function (d) {
+        var gross = d.trips * 0.06 * 120;
+        return [d.n, Math.round(d.trips * 0.06), gross.toFixed(2), (gross * 0.2).toFixed(2), (gross * 0.8).toFixed(2)];
+      }));
+  }
+  return [['Reference', 'Customer', 'Route', 'Tier', 'Chauffeur', 'Pickup', 'Fare GBP', 'Status']].concat(
+    TRIPS.map(function (t) { return [t.ref, t.cust, t.route, t.tier, t.drv, t.when, t.fare.toFixed(2), t.st]; }));
+}
+function drawPreview() {
+  var rows = csvFor(document.getElementById('rType').value);
+  document.getElementById('rvwTable').innerHTML =
+    '<thead><tr>' + rows[0].map(function (h) { return '<th>' + h + '</th>'; }).join('') + '</tr></thead><tbody>' +
+    rows.slice(1).map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody>';
+}
+drawPreview();
+document.getElementById('rType').addEventListener('change', drawPreview);
+
+function download(type) {
+  var rows = csvFor(type);
+  var csv = rows.map(function (r) {
+    return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\r\n');
+  var url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+  var a = document.createElement('a');
+  a.href = url; a.download = 'noir-' + type + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+document.getElementById('dlCsv').addEventListener('click', function () { download(document.getElementById('rType').value); });
+document.addEventListener('click', function (e) {
+  var c = e.target.closest('[data-csv]'); if (c) download(c.dataset.csv);
+});
+
+/* ---------- ops map ---------- */
+var opsMap = L.map('opsMap', { zoomControl: true, scrollWheelZoom: false }).setView([51.505, -0.16], 10);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19
+}).addTo(opsMap);
+
+var VEH = [
+  { n: 'Marcus A.',  p: [51.4805, -0.4200], st: 'With passenger', ref: 'NC-4KP2XA', v: [0.0016, 0.0075] },
+  { n: 'Idris K.',   p: [51.5150, -0.0700], st: 'With passenger', ref: 'NC-9RTM4C', v: [-0.0008, 0.0034] },
+  { n: 'Petra V.',   p: [51.5070, -0.1600], st: 'En route',       ref: 'NC-7WQL3D', v: [-0.0011, -0.0062] },
+  { n: 'Tomas L.',   p: [51.4700, -0.1520], st: 'En route',       ref: 'NC-2HJY8F', v: [-0.0034, -0.0011] },
+  { n: 'Sana R.',    p: [51.5300, -0.1250], st: 'Idle — available', ref: '—',       v: [0.0004, 0.0006] }
+];
+VEH.forEach(function (v) {
+  v.m = L.marker(v.p, { icon: L.divIcon({ className: '', html: '<div class="pin car">▲</div>', iconSize: [30, 30], iconAnchor: [15, 15] }) })
+    .addTo(opsMap).bindTooltip(v.n + ' · ' + v.st);
+});
+document.getElementById('vehList').innerHTML = VEH.map(function (v) {
+  return '<div style="display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)">' +
+    '<span class="avatar">' + v.n.split(' ')[0].slice(0, 1) + v.n.split(' ')[1].slice(0, 1) + '</span>' +
+    '<div style="flex:1"><b style="font-size:.9rem;display:block">' + v.n + '</b><small style="color:var(--txt-mute)">' + v.ref + '</small></div>' +
+    '<span class="pill ' + (v.st === 'Idle — available' ? 'done' : 'live') + '">' + v.st + '</span></div>';
+}).join('');
+
+setInterval(function () {
+  VEH.forEach(function (v) {
+    v.p = [v.p[0] + v.v[0] * 0.35, v.p[1] + v.v[1] * 0.35];
+    v.m.setLatLng(v.p);
+  });
+}, 1400);
+</script>
+</body>
+</html>
